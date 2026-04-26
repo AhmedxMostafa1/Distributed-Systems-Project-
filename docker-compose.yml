@@ -1,0 +1,73 @@
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.3
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.3
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  mongo-secrets:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_secrets_data:/data/db
+
+  mongo-chaos:
+    image: mongo:7
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo_chaos_data:/data/db
+
+  secrets-broker:
+    build:
+      context: ./secrets-broker
+    depends_on:
+      - mongo-secrets
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      SERVICE_NAME: secrets-broker
+      MONGO_URI: mongodb://mongo-secrets:27017
+      DB_NAME: secrets_broker_db
+    ports:
+      - "3001:3001"
+
+  chaos-simulator:
+    build:
+      context: ./chaos-simulator
+    depends_on:
+      - mongo-chaos
+      - kafka
+    environment:
+      NODE_ENV: development
+      PORT: 3002
+      SERVICE_NAME: chaos-simulator
+      MONGO_URI: mongodb://mongo-chaos:27017
+      DB_NAME: chaos_simulator_db
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_CLIENT_ID: chaos-simulator-client
+    ports:
+      - "3002:3002"
+
+volumes:
+  mongo_secrets_data:
+  mongo_chaos_data:
