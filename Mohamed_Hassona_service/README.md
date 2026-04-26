@@ -1,11 +1,5 @@
 # Chunk Catalog + Chunk Location
 
-This repository contains the services under the `Mohamed_Hassona_service/` folder:
-
-- `Mohamed_Hassona_service/chunk-catalog/`
-- `Mohamed_Hassona_service/chunk-location/`
-
-The published repo excludes the service test files, as requested.
 
 ## Structure
 
