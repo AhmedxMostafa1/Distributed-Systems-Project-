@@ -1,4 +1,4 @@
 node_modules/
 */node_modules/
-chunk-catalog/tests/
-chunk-location/tests/
+Walid_Ahmed_Service/secrets-broker/tests/
+Walid_Ahmed_Service/chaos-simulator/tests/
