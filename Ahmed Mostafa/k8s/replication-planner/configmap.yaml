@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: replication-planner-config
+data:
+  SERVICE_NAME: replication-planner
+  PORT: "3000"
+  KAFKA_BROKERS: kafka:9092
+  KAFKA_GROUP_ID: replication-planner-group
+  PLANNER_INPUT_TOPICS: upload.completed,node.heartbeat.missed,integrity.failed
+  REPLICATION_TASK_TOPIC: replication.task.created
+  REPLICATION_TASK_DLQ_TOPIC: replication.task.created.DLQ
+  DEFAULT_REPLICATION_FACTOR: "3"
+  DEFAULT_TARGET_NODES: storage-node-a,storage-node-b,storage-node-c
+  MONGO_DB_NAME: replication_planner

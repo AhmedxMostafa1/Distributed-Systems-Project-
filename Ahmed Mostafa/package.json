@@ -1,0 +1,24 @@
+{
+  "name": "storage-replication-services",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Storage Gateway and Replication Planner microservices.",
+  "main": "index.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "start:storage-gateway": "node services/storage-gateway/src/server.js",
+    "start:replication-planner": "node services/replication-planner/src/worker.js",
+    "pm2:start": "pm2 start pm2/ecosystem.config.cjs",
+    "pm2:stop": "pm2 delete storage-gateway replication-planner",
+    "lint": "node scripts/check-syntax.js",
+    "test": "node scripts/run-tests.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "kafkajs": "^2.2.4",
+    "mongodb": "^6.8.0",
+    "pm2": "^5.4.2"
+  }
+}

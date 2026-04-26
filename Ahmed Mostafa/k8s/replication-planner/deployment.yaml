@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: replication-planner
+  labels:
+    app: replication-planner
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: replication-planner
+  template:
+    metadata:
+      labels:
+        app: replication-planner
+    spec:
+      containers:
+        - name: replication-planner
+          image: replication-planner:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: replication-planner-config
+            - secretRef:
+                name: replication-planner-secret
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 15

@@ -1,0 +1,157 @@
+services:
+  kafka:
+    image: apache/kafka:3.7.0
+    container_name: storage-kafka
+    ports:
+      - "9094:9094"
+    environment:
+      KAFKA_NODE_ID: "1"
+      KAFKA_PROCESS_ROLES: "controller,broker"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
+      KAFKA_LISTENERS: "PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  storage-db:
+    image: mongo:7
+    container_name: storage-gateway-db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: storage_gateway
+      MONGO_INITDB_ROOT_PASSWORD: storage_gateway_pw
+    ports:
+      - "27019:27017"
+    volumes:
+      - storage-db-data:/data/db
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mongosh --username storage_gateway --password storage_gateway_pw --authenticationDatabase admin --eval \"db.adminCommand('ping').ok\" --quiet"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  replication-db:
+    image: mongo:7
+    container_name: replication-planner-db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: replication_planner
+      MONGO_INITDB_ROOT_PASSWORD: replication_planner_pw
+    ports:
+      - "27020:27017"
+    volumes:
+      - replication-db-data:/data/db
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mongosh --username replication_planner --password replication_planner_pw --authenticationDatabase admin --eval \"db.adminCommand('ping').ok\" --quiet"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  storage-gateway:
+    build:
+      context: .
+      dockerfile: services/storage-gateway/Dockerfile
+    container_name: storage-gateway
+    environment:
+      SERVICE_NAME: storage-gateway
+      PORT: "3000"
+      MONGO_URI: mongodb://storage_gateway:storage_gateway_pw@storage-db:27017/storage_gateway?authSource=admin
+      MONGO_DB_NAME: storage_gateway
+      KAFKA_BROKERS: kafka:9092
+      CHUNK_STORED_TOPIC: chunk.stored
+      OBJECT_STORAGE_ROOT: /data/objects
+      MAX_OBJECT_BYTES: 50mb
+    depends_on:
+      kafka:
+        condition: service_healthy
+      storage-db:
+        condition: service_healthy
+    ports:
+      - "3019:3000"
+    volumes:
+      - storage-objects:/data/objects
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  replication-planner:
+    build:
+      context: .
+      dockerfile: services/replication-planner/Dockerfile
+    container_name: replication-planner
+    environment:
+      SERVICE_NAME: replication-planner
+      PORT: "3000"
+      MONGO_URI: mongodb://replication_planner:replication_planner_pw@replication-db:27017/replication_planner?authSource=admin
+      MONGO_DB_NAME: replication_planner
+      KAFKA_BROKERS: kafka:9092
+      KAFKA_GROUP_ID: replication-planner-group
+      PLANNER_INPUT_TOPICS: upload.completed,node.heartbeat.missed,integrity.failed
+      REPLICATION_TASK_TOPIC: replication.task.created
+      REPLICATION_TASK_DLQ_TOPIC: replication.task.created.DLQ
+      DEFAULT_REPLICATION_FACTOR: "3"
+      DEFAULT_TARGET_NODES: storage-node-a,storage-node-b,storage-node-c
+    depends_on:
+      kafka:
+        condition: service_healthy
+      replication-db:
+        condition: service_healthy
+    ports:
+      - "3020:3000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  test-ui:
+    build:
+      context: ./frontend
+    container_name: service-test-ui
+    depends_on:
+      storage-gateway:
+        condition: service_healthy
+      replication-planner:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+
+volumes:
+  replication-db-data:
+  storage-db-data:
+  storage-objects:
