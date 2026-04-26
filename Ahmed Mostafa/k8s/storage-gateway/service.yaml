@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: storage-gateway
+spec:
+  type: ClusterIP
+  selector:
+    app: storage-gateway
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000

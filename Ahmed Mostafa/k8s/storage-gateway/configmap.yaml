@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: storage-gateway-config
+data:
+  SERVICE_NAME: storage-gateway
+  PORT: "3000"
+  KAFKA_BROKERS: kafka:9092
+  CHUNK_STORED_TOPIC: chunk.stored
+  OBJECT_STORAGE_ROOT: /data/objects
+  MAX_OBJECT_BYTES: 50mb
+  MONGO_DB_NAME: storage_gateway

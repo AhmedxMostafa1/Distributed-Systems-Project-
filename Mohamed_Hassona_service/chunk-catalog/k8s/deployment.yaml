@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chunk-catalog
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: chunk-catalog
+  template:
+    metadata:
+      labels:
+        app: chunk-catalog
+    spec:
+      containers:
+        - name: chunk-catalog
+          image: chunk-catalog:latest
+          ports:
+            - containerPort: 3001
+          envFrom:
+            - configMapRef:
+                name: chunk-catalog-config
+            - secretRef:
+                name: chunk-catalog-secret
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 3001
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3001
+            initialDelaySeconds: 5
+            periodSeconds: 10

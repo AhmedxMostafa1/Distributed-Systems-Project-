@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: storage-gateway
+  labels:
+    app: storage-gateway
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: storage-gateway
+  template:
+    metadata:
+      labels:
+        app: storage-gateway
+    spec:
+      containers:
+        - name: storage-gateway
+          image: storage-gateway:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: storage-gateway-config
+            - secretRef:
+                name: storage-gateway-secret
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          volumeMounts:
+            - name: object-data
+              mountPath: /data/objects
+      volumes:
+        - name: object-data
+          emptyDir: {}

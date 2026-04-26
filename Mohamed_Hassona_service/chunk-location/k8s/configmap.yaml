@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chunk-location-config
+data:
+  PORT: "3002"
+  NODE_REGISTRY_BASE_URL: "http://node-registry:3017"

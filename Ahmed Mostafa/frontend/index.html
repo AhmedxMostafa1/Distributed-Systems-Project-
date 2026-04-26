@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Storage Services Tester</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --line: #d9e1ec;
+      --text: #172033;
+      --muted: #5b6b82;
+      --accent: #0f766e;
+      --accent-dark: #115e59;
+      --danger: #b42318;
+      --ok: #067647;
+      --code: #0f172a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    header {
+      border-bottom: 1px solid var(--line);
+      background: #ffffff;
+      padding: 18px 24px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(320px, 520px) 1fr;
+      gap: 18px;
+      padding: 18px;
+    }
+
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 17px;
+      letter-spacing: 0;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 6px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: var(--text);
+      font: inherit;
+      padding: 10px 11px;
+    }
+
+    textarea {
+      min-height: 86px;
+      resize: vertical;
+    }
+
+    button {
+      border: 0;
+      border-radius: 6px;
+      background: var(--accent);
+      color: #ffffff;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 700;
+      min-height: 40px;
+      padding: 9px 13px;
+    }
+
+    button:hover {
+      background: var(--accent-dark);
+    }
+
+    button.secondary {
+      background: #314154;
+    }
+
+    button.secondary:hover {
+      background: #253242;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .status {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #f8fafc;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 7px 10px;
+    }
+
+    .pill.ok {
+      border-color: #abefc6;
+      background: #ecfdf3;
+      color: var(--ok);
+    }
+
+    .pill.bad {
+      border-color: #fecdca;
+      background: #fef3f2;
+      color: var(--danger);
+    }
+
+    pre {
+      min-height: 520px;
+      margin: 0;
+      overflow: auto;
+      border-radius: 8px;
+      background: var(--code);
+      color: #dbeafe;
+      padding: 14px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      pre {
+        min-height: 320px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Storage Services Tester</h1>
+  </header>
+
+  <main>
+    <div>
+      <section>
+        <h2>Service Checks</h2>
+        <div class="status">
+          <span id="storage-status" class="pill">Storage: not checked</span>
+          <span id="planner-status" class="pill">Planner: not checked</span>
+        </div>
+        <div class="actions">
+          <button type="button" onclick="checkServices()">Check Health</button>
+          <button type="button" class="secondary" onclick="clearOutput()">Clear Output</button>
+        </div>
+      </section>
+
+      <section style="margin-top: 18px;">
+        <h2>Storage Gateway</h2>
+        <label for="chunk-id">Chunk ID</label>
+        <input id="chunk-id" value="chunk-demo-1">
+
+        <label for="chunk-content">Chunk Content</label>
+        <textarea id="chunk-content">hello distributed storage</textarea>
+
+        <div class="actions">
+          <button type="button" onclick="storeChunk()">Store Chunk</button>
+          <button type="button" class="secondary" onclick="readChunk()">Read Chunk</button>
+        </div>
+      </section>
+
+      <section style="margin-top: 18px;">
+        <h2>Replication Planner</h2>
+        <div class="grid">
+          <div>
+            <label for="source-node">Current Replica</label>
+            <input id="source-node" value="storage-node-a">
+          </div>
+          <div>
+            <label for="event-id">Event ID</label>
+            <input id="event-id" value="demo-upload-1">
+          </div>
+        </div>
+        <div class="actions">
+          <button type="button" onclick="planReplication()">Create Plan</button>
+        </div>
+      </section>
+    </div>
+
+    <section>
+      <h2>Response</h2>
+      <pre id="output">Ready. Use the buttons on the left.</pre>
+    </section>
+  </main>
+
+  <script>
+    const output = document.getElementById("output");
+
+    function value(id) {
+      return document.getElementById(id).value.trim();
+    }
+
+    function print(title, data) {
+      output.textContent = title + "\n\n" + JSON.stringify(data, null, 2);
+    }
+
+    function printError(title, error) {
+      output.textContent = title + "\n\n" + (error.stack || error.message || String(error));
+    }
+
+    function clearOutput() {
+      output.textContent = "Ready. Use the buttons on the left.";
+    }
+
+    async function requestJson(url, options) {
+      const response = await fetch(url, options);
+      const text = await response.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (_error) {
+        data = text;
+      }
+      if (!response.ok) {
+        throw new Error(JSON.stringify(data, null, 2));
+      }
+      return data;
+    }
+
+    function setStatus(id, ok, label) {
+      const element = document.getElementById(id);
+      element.textContent = label;
+      element.className = "pill " + (ok ? "ok" : "bad");
+    }
+
+    async function checkServices() {
+      try {
+        const storage = await requestJson("/api/storage/ready");
+        setStatus("storage-status", true, "Storage: ready");
+        print("Storage Gateway Ready", storage);
+      } catch (error) {
+        setStatus("storage-status", false, "Storage: failed");
+        printError("Storage Gateway Failed", error);
+      }
+
+      try {
+        const planner = await requestJson("/api/planner/ready");
+        setStatus("planner-status", true, "Planner: ready");
+        print("Replication Planner Ready", planner);
+      } catch (error) {
+        setStatus("planner-status", false, "Planner: failed");
+        printError("Replication Planner Failed", error);
+      }
+    }
+
+    async function storeChunk() {
+      try {
+        const chunkId = encodeURIComponent(value("chunk-id"));
+        const content = value("chunk-content");
+        const data = await requestJson("/api/storage/objects/" + chunkId, {
+          method: "PUT",
+          headers: { "content-type": "application/octet-stream" },
+          body: new TextEncoder().encode(content)
+        });
+        print("Chunk Stored", data);
+      } catch (error) {
+        printError("Store Chunk Failed", error);
+      }
+    }
+
+    async function readChunk() {
+      try {
+        const chunkId = encodeURIComponent(value("chunk-id"));
+        const data = await requestJson("/api/storage/objects/" + chunkId);
+        print("Chunk Loaded", data);
+      } catch (error) {
+        printError("Read Chunk Failed", error);
+      }
+    }
+
+    async function planReplication() {
+      try {
+        const payload = {
+          topic: "upload.completed",
+          event: {
+            event_id: value("event-id") || "demo-upload-" + Date.now(),
+            event_type: "upload.completed",
+            data: {
+              chunks: [
+                {
+                  chunk_id: value("chunk-id"),
+                  replicas: [value("source-node") || "storage-node-a"]
+                }
+              ]
+            }
+          }
+        };
+        const data = await requestJson("/api/planner/replication/plan", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        print("Replication Plan Created", data);
+      } catch (error) {
+        printError("Create Plan Failed", error);
+      }
+    }
+  </script>
+</body>
+
+</html>
