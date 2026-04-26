@@ -1,4 +1,4 @@
-# PM2 - Secrets Broker + Chaos Simulator
+# Walid_Ahmed_Service - Secrets Broker + Chaos Simulator
 
 This repository contains the Phase 2 implementation.
 
@@ -13,7 +13,7 @@ The implementation follows the document's communication classification:
 ## Structure
 
 ```text
-PM2/
+Walid_Ahmed_Service/
   chaos-simulator/
     docs/
     k8s/
@@ -97,8 +97,8 @@ cd ../chaos-simulator && npm test
 
 OpenAPI files:
 
-- [secrets-broker/docs/openapi.json](D:\PROJECT%20DISTRBUTED%20SYS\PM2\secrets-broker\docs\openapi.json)
-- [chaos-simulator/docs/openapi.json](D:\PROJECT%20DISTRBUTED%20SYS\PM2\chaos-simulator\docs\openapi.json)
+- [secrets-broker/docs/openapi.json](./secrets-broker/docs/openapi.json)
+- [chaos-simulator/docs/openapi.json](./chaos-simulator/docs/openapi.json)
 
 Each service also exposes:
 
@@ -108,17 +108,17 @@ Each service also exposes:
 
 Secrets Broker:
 
-- [deployment.yaml](D:\PROJECT%20DISTRBUTED%20SYS\PM2\secrets-broker\k8s\deployment.yaml)
-- [service.yaml](D:\PROJECT%20DISTRBUTED%20SYS\PM2\secrets-broker\k8s\service.yaml)
-- [configmap.yaml](D:\PROJECT%20DISTRBUTED%20SYS\PM2\secrets-broker\k8s\configmap.yaml)
-- [secret.yaml](D:\PROJECT%20DISTRBUTED%20SYS\PM2\secrets-broker\k8s\secret.yaml)
+- [deployment.yaml](./secrets-broker/k8s/deployment.yaml)
+- [service.yaml](./secrets-broker/k8s/service.yaml)
+- [configmap.yaml](./secrets-broker/k8s/configmap.yaml)
+- [secret.yaml](./secrets-broker/k8s/secret.yaml)
 
 Chaos Simulator:
 
-- [deployment.yaml](D:\PROJECT%20DISTRBUTED%20SYS\PM2\chaos-simulator\k8s\deployment.yaml)
-- [service.yaml](D:\PROJECT%20DISTRBUTED%20SYS\PM2\chaos-simulator\k8s\service.yaml)
-- [configmap.yaml](D:\PROJECT%20DISTRBUTED%20SYS\PM2\chaos-simulator\k8s\configmap.yaml)
-- [secret.yaml](D:\PROJECT%20DISTRBUTED%20SYS\PM2\chaos-simulator\k8s\secret.yaml)
+- [deployment.yaml](./chaos-simulator/k8s/deployment.yaml)
+- [service.yaml](./chaos-simulator/k8s/service.yaml)
+- [configmap.yaml](./chaos-simulator/k8s/configmap.yaml)
+- [secret.yaml](./chaos-simulator/k8s/secret.yaml)
 
 Both deployments are configured with `replicas: 2`.
 
