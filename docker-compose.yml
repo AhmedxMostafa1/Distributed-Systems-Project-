@@ -1,0 +1,37 @@
+services:
+  chunk-catalog-db:
+    image: mongo:7
+    environment:
+      MONGO_INITDB_DATABASE: chunk_catalog
+    ports:
+      - "27017:27017"
+
+  chunk-catalog:
+    build:
+      context: ./chunk-catalog
+    environment:
+      PORT: 3001
+      DATABASE_URL: mongodb://chunk-catalog-db:27017/chunk_catalog
+    depends_on:
+      - chunk-catalog-db
+    ports:
+      - "3001:3001"
+
+  chunk-location-db:
+    image: mongo:7
+    environment:
+      MONGO_INITDB_DATABASE: chunk_location
+    ports:
+      - "27018:27017"
+
+  chunk-location:
+    build:
+      context: ./chunk-location
+    environment:
+      PORT: 3002
+      DATABASE_URL: mongodb://chunk-location-db:27017/chunk_location
+      NODE_REGISTRY_BASE_URL: http://node-registry:3017
+    depends_on:
+      - chunk-location-db
+    ports:
+      - "3002:3002"
